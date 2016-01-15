@@ -1,73 +1,65 @@
-require_relative 'tag_info.rb'
 require_relative 'dom_tree.rb'
-
+require_relative 'parse_tag.rb'
 
 class DOMParser
-  attr_reader :html_string
+  attr_accessor :html_string, :tree, :tag_list
+
+    TAG_REGEX = /<.*?>/
+    GREEDY_TAG_REGEX = /<.*>(.*)<\/.*>/
+    GREEDY_OPEN_TAG_REGEX = /<[^\/].*>/
+    OPEN_TAG_REGEX = /<[^\/].*?>/
+    CLOSE_TAG_REGEX = /<\/.*?>/
+    OPEN_HTML_TAG_REGEX = /<html>/
+    CLOSE_HTML_TAG_REGEX = /<\/html>/
 
   def initialize(file)
-    @html_string = File.read(file)[16..-1]
-    @tree = DomTree.new
-    @tag_parser = ParseTag.new
+    @html_string = File.read(file)[16..-1] # ignores doctype declaration
+    @tree = DOMTree.new
+    add_tags_to_tree
   end
 
-  def convert_string(string)
-    tag_regex = /<.*>/
-    greedy_tag_regex = /<.*>(.*)<\/.*>/
-    greedy_tag_open_regex = /<.*>(.*)/
-    open_tag_regex = /<[^\/].*?>/
-    close_tag_regex = /<\/.*?>/
+  def tag_type(string)
+    return "open" if string =~ OPEN_TAG_REGEX
+    return "closed" if string =~ CLOSE_TAG_REGEX
+  end
 
-
-    remaining_string = html_string
-    while remaining_string != ""
-      substring = string.match(greedy_tag_open_regex).post_match
-
-      open_match_obj = string.match(open_tag_regex)
-      close_match_obj = string.match(close_tag_regex)
-
-      open_index = (open_tag_regex =~ string)
-      close_index = (close_tag_regex =~ string)
-
-      if open_index < close_index
-        first_match = open_match_obj
-      else
-        first_match = close_match_obj
-      end
-
-      pre_string = first_match.pre_match
-      @tree.add_text_to_open_node( pre_string )
-
-      tag_string = first_match.to_s
-      
-      #if open tag
-        # create new Node and attack to Dom Tree
-        @tree.open_new_node(DOMTreeNode(nil, @tree.current_open_node, nil, @tree.current_open_node.depth + 1, true))
-        # populate the info with functionality form tag_parser
-        @tag_parser.run( tag_string )
-
-      #else   # close tag
-        # close the open tag in the dom tree
-        @tree.close_node
-      #end
-
-      remaining_string = first_match.post_match
-      # save text as its own node to avoid rendering problem
+  # for each node, print first child depth first
+  def render_tag_tree(tree_node=@tree.root)
+    puts (" " * 2 * tree_node.depth) + "#{tree_node.info.type}"
+    tree_node.children.each do |child|
+      render_tag_tree(child)
     end
+  end
 
+  def convert_tag_to_node(tag)
+    parsed_info = ParseTag.new(tag)
+    info = Tag.new(parsed_info.type, parsed_info.id, parsed_info.classes, parsed_info.name, parsed_info.text)
+    DOMTreeNode.new(info, nil, [], 0)
+  end
+
+  def add_tags_to_tree(string=@html_string)
+    tag_list = string.scan(TAG_REGEX)
+    puts tag_list
+    tag_list.each do |tag|
+      tag_node = convert_tag_to_node(tag)
+      if tag_type(tag) == 'open'
+        if @tree.root == nil
+          tag_node.depth = 0
+          @tree.root = tag_node
+        else
+          @tree.open_new_node(tag_node)
+        end
+      elsif tag_type(tag) == 'closed'
+        @tree.close_node
+      else
+        raise ArgumentError.new("Weird tag!")    
+      end
+    end
   end
 end
 
 
 d = DOMParser.new("test.html")
-# d.convert_string(d.html_string)
-
-
-
-
-
-
-
-
-
-
+# d_basic = DOMParser.new("basictest.html")
+d.render_tag_tree
+# d_basic.render_tag_tree

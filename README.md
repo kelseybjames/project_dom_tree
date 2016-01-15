@@ -91,3 +91,5 @@ desired parsing behavior (wrt test.html)
 .....
 
 
+Don't recurse! Generate the list of tag nodes with depth first.
+render should do a depth first search of the tree.

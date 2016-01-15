@@ -1,0 +1,1 @@
+Tag = Struct.new( :type, :id, :classes, :name, :text )

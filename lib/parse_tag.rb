@@ -1,11 +1,12 @@
+class ParseTag 
+  attr_accessor :type, :id, :classes, :name, :text
 
-TagInfo = Struct.new( :type, :id, :classes, :name, :text )
-
-# class MyTag < Struct.new(:attributes, :go, :here)
-
-class ParseTag
-
-  def initialize
+  def initialize(tag_string=nil)
+    @type = parse_type(tag_string)
+    @id = parse_id(tag_string)
+    @classes = parse_classes(tag_string)
+    @name = parse_name(tag_string)
+    @text = "" 
   end
 
   def parse_type( tag_string )
@@ -13,25 +14,26 @@ class ParseTag
     type
   end
 
+  def parse_id( tag_string )
+    return nil if tag_string.match(/id=['"](.*?)['"]/).nil?
+    id_string = tag_string.match(/id=['"](.*?)['"]/)[1]
+    id_string = id_string.to_s
+    id_string
+  end
+
   def parse_classes( tag_string )
-    classes_string = tag_string.match(/class=['"](.*?)['"]/)[1].to_s
+    return nil if tag_string.match(/class=['"](.*?)['"]/).nil?
+    classes_string = tag_string.match(/class=['"](.*?)['"]/)[1]
+    classes_string = classes_string.to_s
     classes_array = classes_string.split(" ")
     classes_array
   end
 
-  def parse_id( tag_string )
-    id_string = tag_string.match(/id=['"](.*?)['"]/)[1].to_s
-    id_string
-  end
-
   def parse_name( tag_string )
-    name_string = tag_string.match(/name=['"](.*?)['"]/)[1].to_s
+    return nil if tag_string.match(/name=['"](.*?)['"]/).nil?
+    name_string = tag_string.match(/name=['"](.*?)['"]/)[1]
+    name_string = name_string.to_s unless name_string == nil
     name_string
-  end
-
-  def run( tag_string )
-    tag = Tag.new(parse_type(tag_string), parse_id(tag_string), parse_classes(tag_string), parse_name(tag_string), parse_text(tag_string))
-    tag
   end
 
 end
