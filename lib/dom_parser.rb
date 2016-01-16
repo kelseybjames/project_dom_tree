@@ -6,9 +6,10 @@ class DOMParser
 
     TAG_REGEX = /<.*?>/
     TAG_TEXT_REGEX = />(.*?)</m
+    TAG_TOTAL_REGEX = /(.*?)>(.*?)</m
     GREEDY_TAG_REGEX = /<.*>(.*)<\/.*>/
     GREEDY_OPEN_TAG_REGEX = /<[^\/].*>/
-    OPEN_TAG_REGEX = /<[^\/].*?>/
+    OPEN_TAG_REGEX = /[^\/].*?/
     CLOSE_TAG_REGEX = /<\/.*?>/
     OPEN_HTML_TAG_REGEX = /<html>/
     CLOSE_HTML_TAG_REGEX = /<\/html>/
@@ -46,31 +47,28 @@ class DOMParser
     DOMTreeNode.new(info, nil, [], 0)
   end
 
-  def get_text_for_node(node)
-
-  end
-
   def add_tags_to_tree
-    tag_list = @html_string.scan(TAG_REGEX)
-    text_list = @html_string.scan(TAG_TEXT_REGEX)
+    tag_text_list = @html_string.scan(TAG_TOTAL_REGEX)
 
-    tag_list.each_with_index do |tag, index|
-      tag_node = convert_tag_to_node(tag)
-      tag_node_text = text_list[index].to_s[2..-3]
+    tag_text_list.each do |tag|
+      tag_node = convert_tag_to_node(tag[0])
+      tag_node_text = tag[1]
       tag_node_text.gsub!(/\s{2,}/m, "") unless tag_node_text.nil?
       tag_node_text.tr!("\n", "") unless tag_node_text.nil?
       tag_node.info.text = tag_node_text
 
-      if tag_type(tag) == 'open'
+      if tag_type(tag[0]) == 'open'
         if @tree.root == nil
           tag_node.depth = 0
           @tree.root = tag_node
         else
           @tree.open_new_node(tag_node)
         end
-      elsif tag_type(tag) == 'closed'
+      elsif tag_type(tag[0]) == 'closed'
         @tree.close_node
       else
+        puts tag[0]
+        puts tag_type(tag[0])
         raise ArgumentError.new("Weird tag!")    
       end
     end
@@ -80,5 +78,5 @@ end
 
 d = DOMParser.new("test.html")
 # d_basic = DOMParser.new("basictest.html")
-# d.render_tag_tree
+d.render_tag_tree
 # d_basic.render_tag_tree

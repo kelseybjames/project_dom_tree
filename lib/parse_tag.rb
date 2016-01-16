@@ -1,7 +1,7 @@
 class ParseTag 
   attr_accessor :type, :id, :classes, :name, :text
 
-  TAG_TEXT_REGEX = />(.*?)</m
+  TAG_TEXT_REGEX = />(.*?)</m # trying to return tag-text array
 
   def initialize(tag_string=nil, file_string="")
     @type = parse_type(tag_string)
@@ -12,8 +12,9 @@ class ParseTag
   end
 
   def parse_type( tag_string )
-    type = tag_string.match(/<(.*?)[ >]/)[1]
-    type
+    extra_data = ""
+    extra_data = tag_string.partition(" ").last unless tag_string[/ /].nil?
+    tag_string.slice!(extra_data)
   end
 
   def parse_id( tag_string )
