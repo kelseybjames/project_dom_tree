@@ -9,7 +9,7 @@ class NodeRenderer
     @total_children = []
   end
 
-  def render(node)
+  def render(node=@root)
     puts "Type: #{node.info.type.inspect}"
     puts "Classes: #{node.info.classes.inspect}"
     puts "ID: #{node.info.id.inspect}"
@@ -46,3 +46,4 @@ end
 tree = DOMParser.new("test.html").tree
 renderer = NodeRenderer.new(tree)
 renderer.render(tree.root.children[1])
+renderer.render
