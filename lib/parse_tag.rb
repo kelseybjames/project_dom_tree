@@ -1,12 +1,14 @@
 class ParseTag 
   attr_accessor :type, :id, :classes, :name, :text
 
-  def initialize(tag_string=nil)
+  TAG_TEXT_REGEX = />(.*?)</m
+
+  def initialize(tag_string=nil, file_string="")
     @type = parse_type(tag_string)
     @id = parse_id(tag_string)
     @classes = parse_classes(tag_string)
     @name = parse_name(tag_string)
-    @text = "" 
+    @text = parse_text(tag_string, file_string)
   end
 
   def parse_type( tag_string )
@@ -34,6 +36,11 @@ class ParseTag
     name_string = tag_string.match(/name=['"](.*?)['"]/)[1]
     name_string = name_string.to_s unless name_string == nil
     name_string
+  end
+
+  def parse_text( tag_string, file_string )
+    return nil if file_string.match(TAG_TEXT_REGEX).nil?
+    @text = file_string.match(TAG_TEXT_REGEX)[1]
   end
 
 end

@@ -5,6 +5,7 @@ class DOMParser
   attr_accessor :html_string, :tree, :tag_list
 
     TAG_REGEX = /<.*?>/
+    TAG_TEXT_REGEX = />(.*?)</m
     GREEDY_TAG_REGEX = /<.*>(.*)<\/.*>/
     GREEDY_OPEN_TAG_REGEX = /<[^\/].*>/
     OPEN_TAG_REGEX = /<[^\/].*?>/
@@ -25,7 +26,15 @@ class DOMParser
 
   # for each node, print first child depth first
   def render_tag_tree(tree_node=@tree.root)
-    puts (" " * 2 * tree_node.depth) + "#{tree_node.info.type}"
+    string = " " * 2 * tree_node.depth
+    string += "<#{tree_node.info.type}"
+    string += " class=#{tree_node.info.classes}" unless tree_node.info.classes.nil?
+    string += " id=#{tree_node.info.id}" unless tree_node.info.id.nil?
+    string += " name=#{tree_node.info.name}" unless tree_node.info.name.nil?
+    string += ">"
+    string += " #{tree_node.info.text}"
+    puts string
+
     tree_node.children.each do |child|
       render_tag_tree(child)
     end
@@ -37,11 +46,21 @@ class DOMParser
     DOMTreeNode.new(info, nil, [], 0)
   end
 
-  def add_tags_to_tree(string=@html_string)
-    tag_list = string.scan(TAG_REGEX)
-    puts tag_list
-    tag_list.each do |tag|
+  def get_text_for_node(node)
+
+  end
+
+  def add_tags_to_tree
+    tag_list = @html_string.scan(TAG_REGEX)
+    text_list = @html_string.scan(TAG_TEXT_REGEX)
+
+    tag_list.each_with_index do |tag, index|
       tag_node = convert_tag_to_node(tag)
+      tag_node_text = text_list[index].to_s[2..-3]
+      tag_node_text.gsub!(/\s{2,}/m, "") unless tag_node_text.nil?
+      tag_node_text.tr!("\n", "") unless tag_node_text.nil?
+      tag_node.info.text = tag_node_text
+
       if tag_type(tag) == 'open'
         if @tree.root == nil
           tag_node.depth = 0
@@ -61,5 +80,5 @@ end
 
 d = DOMParser.new("test.html")
 # d_basic = DOMParser.new("basictest.html")
-d.render_tag_tree
+# d.render_tag_tree
 # d_basic.render_tag_tree
